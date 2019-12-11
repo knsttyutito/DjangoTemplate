@@ -1,0 +1,46 @@
+version: '3'
+services:
+  nginx:
+      image: nginx:1.13
+      ports:
+        - "80:80"
+      volumes:
+        - ./nginx/conf:/etc/nginx/conf.d
+        - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
+        - ./static:/static
+        - ./nginx/log:/var/log/nginx
+      depends_on:
+        - python
+  db:
+      image: mysql:5.7
+      command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      ports:
+        - "3306:3306"
+      environment:
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${MYSQL_DATABASE}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        MYSQL_TEST_DATABASE: ${MYSQL_TEST_DATABASE}
+        MYSQL_TEST_USER: ${MYSQL_TEST_USER}
+        TZ: 'Asia/Tokyo'
+      volumes:
+        - ./mysql:/var/lib/mysql
+        - ./sql:/docker-entrypoint-initdb.d
+
+  python:
+      build: .
+      command: bash -c "sleep 5 && python3.6 project/generate_env.py && uwsgi --socket :8001 --module project.wsgi --py-autoreload 1 --logto /tmp/mylog.log"
+      environment:
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_TEST_DATABASE=${MYSQL_TEST_DATABASE}
+        - DB_ENDPOINT=${DB_ENDPOINT}
+      volumes:
+        - ./src:/code
+        - ./static:/static
+      expose:
+        - "8001"
+      depends_on:
+        - db

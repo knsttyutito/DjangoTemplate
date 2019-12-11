@@ -1,0 +1,3 @@
+#!/bin/bash
+mysql -u root --password=$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON $MYSQL_TEST_DATABASE TO $MYSQL_TEST_USER";
+mysql -u root --password=$MYSQL_ROOT_PASSWORD -e "FLUSH PRIVILEGES";

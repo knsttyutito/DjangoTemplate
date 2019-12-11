@@ -1,0 +1,5 @@
+.env
+__pycache__
+migrations
+local_settings.py
+.DS_Store
